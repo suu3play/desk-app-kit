@@ -1,0 +1,22 @@
+{
+  "UI": {
+    "Theme": "Dark",
+    "Language": "ja-JP",
+    "FontSize": "14"
+  },
+  "Preferences": {
+    "ShowWelcomeScreen": "false",
+    "AutoSaveEnabled": "true",
+    "AutoSaveInterval": "300"
+  },
+  "Dashboard": {
+    "DefaultView": "Summary",
+    "RefreshInterval": "60",
+    "ShowNotifications": "true"
+  },
+  "Export": {
+    "DefaultFormat": "CSV",
+    "DefaultEncoding": "UTF-8",
+    "IncludeHeaders": "true"
+  }
+}

@@ -11,6 +11,7 @@ using DeskAppKit.Infrastructure.Persistence.Repositories;
 using DeskAppKit.Infrastructure.Security;
 using DeskAppKit.Infrastructure.Settings;
 using DeskAppKit.Infrastructure.Settings.Database;
+using DeskAppKit.Infrastructure.Themes;
 using Microsoft.EntityFrameworkCore;
 
 namespace DeskAppKit.Client;
@@ -22,6 +23,7 @@ public partial class App : Application
 {
     private ILogger? _logger;
     private IAuthenticationService? _authenticationService;
+    private IThemeService? _themeService;
 
     private void Application_Startup(object sender, StartupEventArgs e)
     {
@@ -52,6 +54,11 @@ public partial class App : Application
             // 4. 設定サービス初期化
             var settingsService = new SettingsService(dataDirectory, encryptionKey);
             settingsService.Load();
+
+            // 4-2. テーマサービス初期化
+            _themeService = new ThemeService(settingsService);
+            _themeService.LoadSavedTheme();
+            _logger.Info("App", $"テーマサービスを初期化しました（現在のテーマ: {_themeService.CurrentMode}）");
 
             // 5. DB接続またはローカルモード判定
             var storageMode = settingsService.GetStorageMode();
@@ -118,7 +125,7 @@ public partial class App : Application
                 };
 
                 // 直接メイン画面を表示
-                var mainWindow = new MainWindow(localUser, _logger, healthCheck, settingsService, dataDirectory, encryptionKey);
+                var mainWindow = new MainWindow(localUser, _logger, healthCheck, settingsService, _themeService, dataDirectory, encryptionKey);
                 mainWindow.Show();
                 return;
             }
@@ -131,7 +138,7 @@ public partial class App : Application
             loginViewModel.LoginSucceeded += (s, user) =>
             {
                 _logger.Info("App", $"ログイン成功: {user.DisplayName}");
-                var mainWindow = new MainWindow(user, _logger, healthCheck, settingsService, dataDirectory, encryptionKey);
+                var mainWindow = new MainWindow(user, _logger, healthCheck, settingsService, _themeService, dataDirectory, encryptionKey);
                 mainWindow.Show();
             };
 

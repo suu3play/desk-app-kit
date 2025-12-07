@@ -6,7 +6,8 @@
         xmlns:local="clr-namespace:DeskAppKit.Client"
         mc:Ignorable="d"
         Title="DeskAppKit - メインメニュー" Height="600" Width="900"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource BackgroundBrush}">
 
     <Grid>
         <Grid.RowDefinitions>
@@ -77,14 +78,14 @@
                             </Grid.RowDefinitions>
 
                             <!-- ウェルカムセクション -->
-                            <Border Grid.Row="0" Background="White" Padding="24" Margin="0,0,0,16"
-                                    BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="4">
+                            <Border Grid.Row="0" Background="{DynamicResource CardBackgroundBrush}" Padding="24" Margin="0,0,0,16"
+                                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="4">
                                 <StackPanel>
                                     <TextBlock Text="DeskAppKit へようこそ" FontSize="24" FontWeight="Bold"
-                                               Foreground="#2196F3" Margin="0,0,0,8"/>
+                                               Foreground="{DynamicResource PrimaryBrush}" Margin="0,0,0,8"/>
                                     <TextBlock Text="デスクトップアプリケーション共通基盤" FontSize="14"
-                                               Foreground="#666" Margin="0,0,0,16"/>
-                                    <TextBlock TextWrapping="Wrap" Foreground="#666">
+                                               Foreground="{DynamicResource SecondaryForegroundBrush}" Margin="0,0,0,16"/>
+                                    <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource SecondaryForegroundBrush}">
                                         <Run Text="このアプリケーションは、デスクトップアプリケーション開発における共通機能を提供します。"/>
                                         <LineBreak/>
                                         <Run Text="上部のメニューから各機能にアクセスできます。"/>
@@ -102,50 +103,50 @@
                                     </ItemsControl.ItemsPanel>
 
                                     <!-- カード1: 認証・ユーザー管理 -->
-                                    <Border Background="White" Margin="0,0,8,8" Padding="20"
-                                            BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="4">
+                                    <Border Background="{DynamicResource CardBackgroundBrush}" Margin="0,0,8,8" Padding="20"
+                                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="4">
                                         <StackPanel>
                                             <TextBlock Text="🔐" FontSize="32" Margin="0,0,0,12"/>
                                             <TextBlock Text="認証・ユーザー管理" FontSize="16" FontWeight="Bold"
-                                                       Foreground="#333" Margin="0,0,0,8"/>
+                                                       Foreground="{DynamicResource ForegroundBrush}" Margin="0,0,0,8"/>
                                             <TextBlock Text="ログイン、ユーザー認証、権限管理などの基本機能"
-                                                       TextWrapping="Wrap" Foreground="#666" FontSize="13"/>
+                                                       TextWrapping="Wrap" Foreground="{DynamicResource SecondaryForegroundBrush}" FontSize="13"/>
                                         </StackPanel>
                                     </Border>
 
                                     <!-- カード2: 設定管理 -->
-                                    <Border Background="White" Margin="8,0,0,8" Padding="20"
-                                            BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="4">
+                                    <Border Background="{DynamicResource CardBackgroundBrush}" Margin="8,0,0,8" Padding="20"
+                                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="4">
                                         <StackPanel>
                                             <TextBlock Text="⚙️" FontSize="32" Margin="0,0,0,12"/>
                                             <TextBlock Text="設定管理" FontSize="16" FontWeight="Bold"
-                                                       Foreground="#333" Margin="0,0,0,8"/>
+                                                       Foreground="{DynamicResource ForegroundBrush}" Margin="0,0,0,8"/>
                                             <TextBlock Text="アプリケーション設定、ユーザー設定の保存・読み込み"
-                                                       TextWrapping="Wrap" Foreground="#666" FontSize="13"/>
+                                                       TextWrapping="Wrap" Foreground="{DynamicResource SecondaryForegroundBrush}" FontSize="13"/>
                                         </StackPanel>
                                     </Border>
 
                                     <!-- カード3: ログ・診断 -->
-                                    <Border Background="White" Margin="0,8,8,0" Padding="20"
-                                            BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="4">
+                                    <Border Background="{DynamicResource CardBackgroundBrush}" Margin="0,8,8,0" Padding="20"
+                                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="4">
                                         <StackPanel>
                                             <TextBlock Text="📊" FontSize="32" Margin="0,0,0,12"/>
                                             <TextBlock Text="ログ・診断機能" FontSize="16" FontWeight="Bold"
-                                                       Foreground="#333" Margin="0,0,0,8"/>
+                                                       Foreground="{DynamicResource ForegroundBrush}" Margin="0,0,0,8"/>
                                             <TextBlock Text="アプリケーションログの記録、ヘルスチェック、診断情報"
-                                                       TextWrapping="Wrap" Foreground="#666" FontSize="13"/>
+                                                       TextWrapping="Wrap" Foreground="{DynamicResource SecondaryForegroundBrush}" FontSize="13"/>
                                         </StackPanel>
                                     </Border>
 
                                     <!-- カード4: 通知・メッセージング -->
-                                    <Border Background="White" Margin="8,8,0,0" Padding="20"
-                                            BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="4">
+                                    <Border Background="{DynamicResource CardBackgroundBrush}" Margin="8,8,0,0" Padding="20"
+                                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="4">
                                         <StackPanel>
                                             <TextBlock Text="🔔" FontSize="32" Margin="0,0,0,12"/>
                                             <TextBlock Text="通知・メッセージング" FontSize="16" FontWeight="Bold"
-                                                       Foreground="#333" Margin="0,0,0,8"/>
+                                                       Foreground="{DynamicResource ForegroundBrush}" Margin="0,0,0,8"/>
                                             <TextBlock Text="ユーザー通知、トースト通知、メッセージング機能"
-                                                       TextWrapping="Wrap" Foreground="#666" FontSize="13"/>
+                                                       TextWrapping="Wrap" Foreground="{DynamicResource SecondaryForegroundBrush}" FontSize="13"/>
                                         </StackPanel>
                                     </Border>
                                 </ItemsControl>

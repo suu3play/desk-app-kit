@@ -16,6 +16,7 @@ public class MainViewModel : ViewModelBase
     private readonly ILogger? _logger;
     private readonly HealthCheck? _healthCheck;
     private readonly ISettingsService? _settingsService;
+    private readonly IThemeService? _themeService;
     private readonly string? _dataDirectory;
     private readonly string? _encryptionKey;
 
@@ -24,6 +25,7 @@ public class MainViewModel : ViewModelBase
         ILogger? logger = null,
         HealthCheck? healthCheck = null,
         ISettingsService? settingsService = null,
+        IThemeService? themeService = null,
         string? dataDirectory = null,
         string? encryptionKey = null)
     {
@@ -31,6 +33,7 @@ public class MainViewModel : ViewModelBase
         _logger = logger;
         _healthCheck = healthCheck;
         _settingsService = settingsService;
+        _themeService = themeService;
         _dataDirectory = dataDirectory;
         _encryptionKey = encryptionKey;
 
@@ -98,7 +101,7 @@ public class MainViewModel : ViewModelBase
             return;
         }
 
-        var viewModel = new SettingsViewModel(_settingsService, _dataDirectory, _encryptionKey, _logger);
+        var viewModel = new SettingsViewModel(_settingsService, _dataDirectory, _encryptionKey, _logger, _themeService);
         var settingsWindow = new Views.SettingsWindow(viewModel);
         settingsWindow.ShowDialog();
 

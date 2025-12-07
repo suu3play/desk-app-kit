@@ -14,6 +14,7 @@ public class SettingsViewModel : ViewModelBase
     private readonly ISettingsService _settingsService;
     private readonly BootstrapDbManager _bootstrapDbManager;
     private readonly ILogger _logger;
+    private readonly IThemeService? _themeService;
 
     private StorageMode _selectedStorageMode;
     private string _dbServer = string.Empty;
@@ -23,15 +24,18 @@ public class SettingsViewModel : ViewModelBase
     private bool _useIntegratedSecurity;
     private string _statusMessage = string.Empty;
     private bool _isTesting;
+    private ThemeMode _selectedThemeMode;
 
-    public SettingsViewModel(ISettingsService settingsService, string dataDirectory, string encryptionKey, ILogger logger)
+    public SettingsViewModel(ISettingsService settingsService, string dataDirectory, string encryptionKey, ILogger logger, IThemeService? themeService = null)
     {
         _settingsService = settingsService;
         _bootstrapDbManager = new BootstrapDbManager(dataDirectory, encryptionKey);
         _logger = logger;
+        _themeService = themeService;
 
         // 現在の設定を読み込み
         _selectedStorageMode = _settingsService.GetStorageMode();
+        _selectedThemeMode = _themeService?.CurrentMode ?? ThemeMode.Light;
         LoadDatabaseConfig();
 
         // コマンド初期化
@@ -53,6 +57,26 @@ public class SettingsViewModel : ViewModelBase
     /// StorageMode一覧
     /// </summary>
     public StorageMode[] AvailableStorageModes => new[] { StorageMode.Local, StorageMode.Database };
+
+    /// <summary>
+    /// 選択中のテーマモード
+    /// </summary>
+    public ThemeMode SelectedThemeMode
+    {
+        get => _selectedThemeMode;
+        set
+        {
+            if (SetProperty(ref _selectedThemeMode, value))
+            {
+                ApplyTheme(value);
+            }
+        }
+    }
+
+    /// <summary>
+    /// テーマモード一覧
+    /// </summary>
+    public ThemeMode[] AvailableThemeModes => new[] { ThemeMode.Light, ThemeMode.Dark, ThemeMode.System };
 
     /// <summary>
     /// DBサーバー名
@@ -210,6 +234,27 @@ public class SettingsViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// テーマ適用
+    /// </summary>
+    private void ApplyTheme(ThemeMode mode)
+    {
+        if (_themeService == null)
+        {
+            return;
+        }
+
+        try
+        {
+            _themeService.ApplyTheme(mode);
+            _logger.Info("SettingsViewModel", $"テーマを切り替えました: {mode}");
+        }
+        catch (Exception ex)
+        {
+            _logger.Error("SettingsViewModel", "テーマ切り替え中にエラー", ex);
+        }
+    }
+
+    /// <summary>
     /// 設定保存
     /// </summary>
     private void Save()
@@ -233,6 +278,9 @@ public class SettingsViewModel : ViewModelBase
 
                 _bootstrapDbManager.Save(config);
             }
+
+            // テーマ保存
+            _themeService?.SaveCurrentTheme();
 
             _settingsService.Save();
             StatusMessage = "設定を保存しました";
