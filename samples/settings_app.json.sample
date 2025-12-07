@@ -1,0 +1,23 @@
+{
+  "System": {
+    "StorageMode": "Local",
+    "AppVersion": "1.0.0",
+    "EncryptionEnabled": "true"
+  },
+  "Logging": {
+    "LogLevel": "Info",
+    "LogRetentionDays": "30",
+    "LogDirectory": "%LOCALAPPDATA%\\DeskAppKit\\Logs"
+  },
+  "Update": {
+    "AutoUpdateEnabled": "false",
+    "UpdateCheckInterval": "86400",
+    "UpdateServerUrl": "https://update.example.com/api/versions"
+  },
+  "UI": {
+    "Theme": "Light",
+    "Language": "ja-JP",
+    "WindowWidth": "1024",
+    "WindowHeight": "768"
+  }
+}

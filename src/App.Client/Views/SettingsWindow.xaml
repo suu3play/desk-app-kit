@@ -32,6 +32,17 @@
 
                 <Separator Margin="0,0,0,24"/>
 
+                <!-- テーマ設定 -->
+                <TextBlock Text="テーマ" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                <TextBlock TextWrapping="Wrap" Foreground="#666" Margin="0,0,0,8"
+                           Text="アプリケーションの外観テーマを選択してください。変更は即座に反映されます。"/>
+
+                <ComboBox ItemsSource="{Binding AvailableThemeModes}"
+                          SelectedItem="{Binding SelectedThemeMode}"
+                          Margin="0,0,0,24" Padding="8" FontSize="14"/>
+
+                <Separator Margin="0,0,0,24"/>
+
                 <!-- データベース設定 -->
                 <TextBlock Text="データベース接続設定" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12"/>
                 <TextBlock TextWrapping="Wrap" Foreground="#666" Margin="0,0,0,16"

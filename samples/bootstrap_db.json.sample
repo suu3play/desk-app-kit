@@ -1,0 +1,8 @@
+{
+  "Server": "localhost",
+  "Port": 1433,
+  "Database": "DeskAppKitDb",
+  "UserId": "",
+  "Password": "",
+  "IntegratedSecurity": true
+}
