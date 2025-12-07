@@ -1,4 +1,5 @@
 using System.Windows.Input;
+using DeskAppKit.Core.Enums;
 using DeskAppKit.Core.Interfaces;
 using DeskAppKit.Core.Models;
 using DeskAppKit.Infrastructure.Diagnostics;
@@ -16,14 +17,17 @@ public class MainViewModel : ViewModelBase
     private readonly ILogger? _logger;
     private readonly HealthCheck? _healthCheck;
     private readonly ISettingsService? _settingsService;
+    private readonly IThemeService? _themeService;
     private readonly string? _dataDirectory;
     private readonly string? _encryptionKey;
+    private string _currentThemeDisplayName = "ライト";
 
     public MainViewModel(
         User currentUser,
         ILogger? logger = null,
         HealthCheck? healthCheck = null,
         ISettingsService? settingsService = null,
+        IThemeService? themeService = null,
         string? dataDirectory = null,
         string? encryptionKey = null)
     {
@@ -31,13 +35,21 @@ public class MainViewModel : ViewModelBase
         _logger = logger;
         _healthCheck = healthCheck;
         _settingsService = settingsService;
+        _themeService = themeService;
         _dataDirectory = dataDirectory;
         _encryptionKey = encryptionKey;
+
+        // 現在のテーマ表示名を設定
+        if (_themeService != null)
+        {
+            _currentThemeDisplayName = GetThemeDisplayName(_themeService.CurrentMode);
+        }
 
         // コマンド初期化
         ShowSettingsCommand = new RelayCommand(ShowSettings);
         ShowDiagnosticsCommand = new RelayCommand(ShowDiagnostics);
         ShowAboutCommand = new RelayCommand(ShowAbout);
+        ToggleThemeCommand = new RelayCommand(ToggleTheme);
         LogoutCommand = new RelayCommand(Logout);
     }
 
@@ -65,6 +77,15 @@ public class MainViewModel : ViewModelBase
     public string WelcomeMessage => $"ようこそ、{CurrentUser.DisplayName} さん";
 
     /// <summary>
+    /// 現在のテーマ表示名
+    /// </summary>
+    public string CurrentThemeDisplayName
+    {
+        get => _currentThemeDisplayName;
+        set => SetProperty(ref _currentThemeDisplayName, value);
+    }
+
+    /// <summary>
     /// 設定画面表示コマンド
     /// </summary>
     public ICommand ShowSettingsCommand { get; }
@@ -78,6 +99,11 @@ public class MainViewModel : ViewModelBase
     /// バージョン情報表示コマンド
     /// </summary>
     public ICommand ShowAboutCommand { get; }
+
+    /// <summary>
+    /// テーマ切り替えコマンド
+    /// </summary>
+    public ICommand ToggleThemeCommand { get; }
 
     /// <summary>
     /// ログアウトコマンド
@@ -127,6 +153,33 @@ public class MainViewModel : ViewModelBase
         var aboutWindow = new Views.AboutWindow();
         aboutWindow.ShowDialog();
         CurrentViewTitle = "ホーム";
+    }
+
+    private void ToggleTheme()
+    {
+        if (_themeService == null)
+        {
+            return;
+        }
+
+        var newMode = _themeService.CurrentMode == ThemeMode.Light ? ThemeMode.Dark : ThemeMode.Light;
+        _themeService.ApplyTheme(newMode);
+        _themeService.SaveCurrentTheme();
+
+        CurrentThemeDisplayName = GetThemeDisplayName(newMode);
+
+        _logger?.Info("MainViewModel", $"テーマを切り替えました: {newMode}");
+    }
+
+    private string GetThemeDisplayName(ThemeMode mode)
+    {
+        return mode switch
+        {
+            ThemeMode.Light => "ライト",
+            ThemeMode.Dark => "ダーク",
+            ThemeMode.System => "システム",
+            _ => "ライト"
+        };
     }
 
     private void Logout()

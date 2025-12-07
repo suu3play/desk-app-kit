@@ -17,12 +17,13 @@ public partial class MainWindow : Window
         ILogger? logger = null,
         HealthCheck? healthCheck = null,
         ISettingsService? settingsService = null,
+        IThemeService? themeService = null,
         string? dataDirectory = null,
         string? encryptionKey = null)
     {
         InitializeComponent();
 
-        var viewModel = new MainViewModel(currentUser, logger, healthCheck, settingsService, dataDirectory, encryptionKey);
+        var viewModel = new MainViewModel(currentUser, logger, healthCheck, settingsService, themeService, dataDirectory, encryptionKey);
         DataContext = viewModel;
 
         // ログアウトイベント

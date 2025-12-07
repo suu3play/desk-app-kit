@@ -51,9 +51,22 @@
                     </Button>
                     <Button Content="バージョン情報" Command="{Binding ShowAboutCommand}"
                             Background="#1976D2" Foreground="White" BorderThickness="0"
-                            Padding="16,6" Margin="0,0,16,0" Cursor="Hand">
+                            Padding="16,6" Margin="0,0,8,0" Cursor="Hand">
                         <Button.ToolTip>
                             <ToolTip Content="アプリケーション情報 (Alt+A)"/>
+                        </Button.ToolTip>
+                    </Button>
+                    <Button Command="{Binding ToggleThemeCommand}"
+                            Background="#1976D2" Foreground="White" BorderThickness="0"
+                            Padding="16,6" Margin="0,0,16,0" Cursor="Hand">
+                        <Button.Content>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🌙" FontSize="14" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding CurrentThemeDisplayName}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button.Content>
+                        <Button.ToolTip>
+                            <ToolTip Content="テーマ切り替え (ライト/ダーク)"/>
                         </Button.ToolTip>
                     </Button>
                     <Button Content="ログアウト" Command="{Binding LogoutCommand}"
