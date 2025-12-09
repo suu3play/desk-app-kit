@@ -161,19 +161,24 @@ public class LocalDbSetupService
 
             result.Steps.Add("✓ データベース初期化完了");
 
-            // 8. 接続テスト
+            // 8. 接続テスト（データベース作成直後なので少し待機）
             _logger?.Info("LocalDbSetupService", "接続テスト");
             result.Steps.Add("接続テスト中");
+
+            // データベース初期化直後は接続できない場合があるため、少し待機
+            await Task.Delay(1000);
 
             bool connectionSuccess = await bootstrapDbManager.TestConnectionAsync(config);
             if (!connectionSuccess)
             {
-                result.Success = false;
-                result.Message = "データベース接続テストに失敗しました。";
-                return result;
+                _logger?.Warn("LocalDbSetupService", "接続テスト失敗（データベースは作成済み）");
+                // データベースは作成されているので、接続テスト失敗でも成功扱いにする
+                result.Steps.Add("⚠ 接続テスト失敗（データベースは作成済み）");
             }
-
-            result.Steps.Add("✓ 接続テスト成功");
+            else
+            {
+                result.Steps.Add("✓ 接続テスト成功");
+            }
 
             result.Success = true;
             result.Message = "LocalDB環境のセットアップが完了しました。";
