@@ -1,7 +1,9 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Threading;
+using DeskAppKit.Core.Enums;
 using DeskAppKit.Core.Interfaces;
+using DeskAppKit.Core.Models;
 
 namespace DeskAppKit.Client.Services;
 
@@ -12,11 +14,13 @@ public class GlobalExceptionHandler
 {
     private readonly ILogger _logger;
     private readonly string _errorLogDirectory;
+    private readonly INotificationCenter? _notificationCenter;
 
-    public GlobalExceptionHandler(ILogger logger, string errorLogDirectory)
+    public GlobalExceptionHandler(ILogger logger, string errorLogDirectory, INotificationCenter? notificationCenter = null)
     {
         _logger = logger;
         _errorLogDirectory = errorLogDirectory;
+        _notificationCenter = notificationCenter;
     }
 
     /// <summary>
@@ -43,6 +47,9 @@ public class GlobalExceptionHandler
 
         var errorMessage = FormatErrorMessage(e.Exception);
         var errorId = SaveErrorReport(e.Exception);
+
+        // 通知センターに通知を追加
+        AddErrorNotification("UIスレッドエラー", errorMessage, errorId);
 
         var result = MessageBox.Show(
             $"予期しないエラーが発生しました。\n\n{errorMessage}\n\nエラーID: {errorId}\n\nアプリケーションを続行しますか?",
@@ -144,6 +151,25 @@ public class GlobalExceptionHandler
         {
             _logger.Error("GlobalExceptionHandler", "エラーレポートの保存に失敗しました", saveEx);
             return "UNKNOWN";
+        }
+    }
+
+    /// <summary>
+    /// エラー通知を追加
+    /// </summary>
+    private void AddErrorNotification(string title, string message, string errorId)
+    {
+        if (_notificationCenter != null)
+        {
+            var notification = new Notification
+            {
+                Title = title,
+                Message = $"{message}\n\nエラーID: {errorId}",
+                Level = NotificationLevel.Error,
+                Category = "Exception"
+            };
+
+            _notificationCenter.AddNotification(notification);
         }
     }
 }

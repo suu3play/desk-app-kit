@@ -4,6 +4,7 @@ using DeskAppKit.Client.Services;
 using DeskAppKit.Client.ViewModels;
 using DeskAppKit.Client.Views;
 using DeskAppKit.Core.Interfaces;
+using DeskAppKit.Infrastructure.Data;
 using DeskAppKit.Infrastructure.Diagnostics;
 using DeskAppKit.Infrastructure.Logging;
 using DeskAppKit.Infrastructure.Persistence.DbContexts;
@@ -13,6 +14,7 @@ using DeskAppKit.Infrastructure.Settings;
 using DeskAppKit.Infrastructure.Settings.Database;
 using DeskAppKit.Infrastructure.Themes;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace DeskAppKit.Client;
 
@@ -24,6 +26,7 @@ public partial class App : Application
     private ILogger? _logger;
     private IAuthenticationService? _authenticationService;
     private IThemeService? _themeService;
+    private INotificationCenter? _notificationCenter;
 
     private void Application_Startup(object sender, StartupEventArgs e)
     {
@@ -45,9 +48,13 @@ public partial class App : Application
             _logger = new FileLogger(logDirectory, appVersion);
             _logger.Info("App", "アプリケーション起動");
 
+            // 3-1. 通知センター初期化
+            _notificationCenter = new Infrastructure.Notifications.NotificationCenter(_logger);
+            _logger.Info("App", "通知センターを初期化しました");
+
             // 3-2. グローバル例外ハンドラー登録
             var errorLogDirectory = Path.Combine(baseDirectory, "ErrorLogs");
-            var exceptionHandler = new GlobalExceptionHandler(_logger, errorLogDirectory);
+            var exceptionHandler = new GlobalExceptionHandler(_logger, errorLogDirectory, _notificationCenter);
             exceptionHandler.Register();
             _logger.Info("App", "グローバル例外ハンドラーを登録しました");
 
@@ -106,6 +113,44 @@ public partial class App : Application
                 }
             }
 
+            // 6-3. データ一覧サービス初期化
+            IDataListService? dataListService = null;
+            if (storageMode == Core.Enums.StorageMode.Database)
+            {
+                try
+                {
+                    var bootstrapDbManager = new BootstrapDbManager(dataDirectory, encryptionKey);
+                    var dbConfig = bootstrapDbManager.Load();
+                    if (dbConfig != null)
+                    {
+                        // IConfigurationを作成してDataListServiceに渡す
+                        var configBuilder = new ConfigurationBuilder();
+                        var connectionString = dbConfig.GetConnectionString();
+                        var configDict = new Dictionary<string, string?>
+                        {
+                            ["ConnectionStrings:DefaultConnection"] = connectionString
+                        };
+                        configBuilder.AddInMemoryCollection(configDict);
+                        var configuration = configBuilder.Build();
+
+                        dataListService = new DataListService(configuration, _logger);
+                        _logger.Info("App", "データ一覧サービスを初期化しました");
+                    }
+                    else
+                    {
+                        _logger.Warn("App", "bootstrap_db.jsonが見つかりません。データ一覧サービスは利用できません。");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error("App", "データ一覧サービス初期化エラー", ex);
+                }
+            }
+            else
+            {
+                _logger.Info("App", "Localモードのため、データ一覧サービスは利用できません。");
+            }
+
             // 7. Localモードの場合はログイン画面をスキップ
             if (_authenticationService == null)
             {
@@ -125,7 +170,7 @@ public partial class App : Application
                 };
 
                 // 直接メイン画面を表示
-                var mainWindow = new MainWindow(localUser, _logger, healthCheck, settingsService, _themeService, dataDirectory, encryptionKey);
+                var mainWindow = new MainWindow(localUser, _logger, healthCheck, settingsService, _themeService, _notificationCenter, dataListService, dataDirectory, encryptionKey);
                 mainWindow.Show();
                 return;
             }
@@ -138,7 +183,7 @@ public partial class App : Application
             loginViewModel.LoginSucceeded += (s, user) =>
             {
                 _logger.Info("App", $"ログイン成功: {user.DisplayName}");
-                var mainWindow = new MainWindow(user, _logger, healthCheck, settingsService, _themeService, dataDirectory, encryptionKey);
+                var mainWindow = new MainWindow(user, _logger, healthCheck, settingsService, _themeService, _notificationCenter, dataListService, dataDirectory, encryptionKey);
                 mainWindow.Show();
             };
 
