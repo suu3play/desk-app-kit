@@ -18,14 +18,14 @@ public partial class SettingsWindow : Window
         DataContext = viewModel;
 
         // 初期パスワード設定
-        PasswordBox.Password = viewModel.DbPassword;
+        PasswordBox.Password = viewModel.DatabaseSettings.DbPassword;
     }
 
     private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
     {
         if (sender is PasswordBox passwordBox)
         {
-            _viewModel.DbPassword = passwordBox.Password;
+            _viewModel.DatabaseSettings.DbPassword = passwordBox.Password;
         }
     }
 

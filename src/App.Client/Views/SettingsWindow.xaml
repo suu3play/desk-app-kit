@@ -18,73 +18,104 @@
             <TextBlock Text="アプリケーション設定" FontSize="24" FontWeight="Bold" Foreground="White"/>
         </Border>
 
-        <!-- コンテンツ -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="24">
-            <StackPanel>
-                <!-- StorageMode設定 -->
-                <TextBlock Text="ストレージモード" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12"/>
-                <TextBlock TextWrapping="Wrap" Foreground="#666" Margin="0,0,0,8"
-                           Text="データの保存方法を選択してください。変更後はアプリケーションの再起動が必要です。"/>
+        <!-- タブコントロール -->
+        <TabControl Grid.Row="1" Margin="0">
+            <!-- 一般設定タブ -->
+            <TabItem Header="一般">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24">
+                    <StackPanel>
+                        <!-- StorageMode設定 -->
+                        <TextBlock Text="ストレージモード" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                        <TextBlock TextWrapping="Wrap" Foreground="#666" Margin="0,0,0,8"
+                                   Text="データの保存方法を選択してください。変更後はアプリケーションの再起動が必要です。"/>
 
-                <ComboBox ItemsSource="{Binding AvailableStorageModes}"
-                          SelectedItem="{Binding SelectedStorageMode}"
-                          Margin="0,0,0,24" Padding="8" FontSize="14"/>
+                        <ComboBox ItemsSource="{Binding AvailableStorageModes}"
+                                  SelectedItem="{Binding SelectedStorageMode}"
+                                  Margin="0,0,0,24" Padding="8" FontSize="14"/>
 
-                <Separator Margin="0,0,0,24"/>
+                        <Separator Margin="0,0,0,24"/>
 
-                <!-- テーマ設定 -->
-                <TextBlock Text="テーマ" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12"/>
-                <TextBlock TextWrapping="Wrap" Foreground="#666" Margin="0,0,0,8"
-                           Text="アプリケーションの外観テーマを選択してください。変更は即座に反映されます。"/>
+                        <!-- テーマ設定 -->
+                        <TextBlock Text="テーマ" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                        <TextBlock TextWrapping="Wrap" Foreground="#666" Margin="0,0,0,8"
+                                   Text="アプリケーションの外観テーマを選択してください。変更は即座に反映されます。"/>
 
-                <ComboBox ItemsSource="{Binding AvailableThemeModes}"
-                          SelectedItem="{Binding SelectedThemeMode}"
-                          Margin="0,0,0,24" Padding="8" FontSize="14"/>
+                        <ComboBox ItemsSource="{Binding AvailableThemeModes}"
+                                  SelectedItem="{Binding SelectedThemeMode}"
+                                  Margin="0,0,0,24" Padding="8" FontSize="14"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
 
-                <Separator Margin="0,0,0,24"/>
+            <!-- データベース設定タブ -->
+            <TabItem Header="データベース">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24">
+                    <StackPanel DataContext="{Binding DatabaseSettings}">
+                        <!-- 接続状態 -->
+                        <TextBlock Text="現在の接続状態" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                        <TextBlock Text="{Binding ConnectionStatus}" FontSize="14" Foreground="#555" Margin="0,0,0,24"/>
 
-                <!-- データベース設定 -->
-                <TextBlock Text="データベース接続設定" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12"/>
-                <TextBlock TextWrapping="Wrap" Foreground="#666" Margin="0,0,0,16"
-                           Text="データベースモードを使用する場合の接続情報を設定してください。"/>
+                        <Separator Margin="0,0,0,24"/>
 
-                <!-- サーバー名 -->
-                <TextBlock Text="サーバー名" Margin="0,0,0,4" Foreground="#555"/>
-                <TextBox Text="{Binding DbServer, UpdateSourceTrigger=PropertyChanged}"
-                         Margin="0,0,0,12" Padding="8"/>
+                        <!-- LocalDBセットアップ -->
+                        <TextBlock Text="ローカル開発環境セットアップ" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                        <TextBlock TextWrapping="Wrap" Foreground="#666" Margin="0,0,0,12"
+                                   Text="LocalDBを使用してローカル開発環境を自動的にセットアップします。"/>
 
-                <!-- データベース名 -->
-                <TextBlock Text="データベース名" Margin="0,0,0,4" Foreground="#555"/>
-                <TextBox Text="{Binding DbName, UpdateSourceTrigger=PropertyChanged}"
-                         Margin="0,0,0,12" Padding="8"/>
+                        <Button Content="ローカルDB環境をセットアップ"
+                                Command="{Binding SetupLocalDbCommand}"
+                                Padding="16,10" HorizontalAlignment="Left" Margin="0,0,0,8"
+                                Background="#1976D2" Foreground="White" BorderThickness="0" Cursor="Hand"
+                                IsEnabled="{Binding IsSettingUp, Converter={StaticResource InverseBooleanConverter}}"/>
 
-                <!-- Windows認証チェックボックス -->
-                <CheckBox Content="Windows認証を使用する"
-                          IsChecked="{Binding UseIntegratedSecurity}"
-                          Margin="0,0,0,12" FontSize="14"/>
+                        <TextBlock Text="{Binding StatusMessage}" Foreground="#666" FontSize="12" Margin="0,0,0,24"/>
 
-                <!-- ユーザー名 -->
-                <TextBlock Text="ユーザー名" Margin="0,0,0,4" Foreground="#555"
-                           IsEnabled="{Binding IsUserPasswordEnabled}"/>
-                <TextBox Text="{Binding DbUsername, UpdateSourceTrigger=PropertyChanged}"
-                         IsEnabled="{Binding IsUserPasswordEnabled}"
-                         Margin="0,0,0,12" Padding="8"/>
+                        <Separator Margin="0,0,0,24"/>
 
-                <!-- パスワード -->
-                <TextBlock Text="パスワード" Margin="0,0,0,4" Foreground="#555"
-                           IsEnabled="{Binding IsUserPasswordEnabled}"/>
-                <PasswordBox x:Name="PasswordBox"
-                             IsEnabled="{Binding IsUserPasswordEnabled}"
-                             PasswordChanged="PasswordBox_PasswordChanged"
-                             Margin="0,0,0,12" Padding="8"/>
+                        <!-- 手動設定 -->
+                        <TextBlock Text="手動データベース設定" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                        <TextBlock TextWrapping="Wrap" Foreground="#666" Margin="0,0,0,16"
+                                   Text="既存のSQL Serverに接続する場合は、以下の接続情報を設定してください。"/>
 
-                <!-- 接続テストボタン -->
-                <Button Content="接続テスト" Command="{Binding TestConnectionCommand}"
-                        Padding="16,8" HorizontalAlignment="Left"
-                        Background="#4CAF50" Foreground="White" BorderThickness="0" Cursor="Hand"
-                        IsEnabled="{Binding IsTesting, Converter={StaticResource InverseBooleanConverter}}"/>
-            </StackPanel>
-        </ScrollViewer>
+                        <!-- サーバー名 -->
+                        <TextBlock Text="サーバー名" Margin="0,0,0,4" Foreground="#555"/>
+                        <TextBox Text="{Binding DbServer, UpdateSourceTrigger=PropertyChanged}"
+                                 Margin="0,0,0,12" Padding="8"/>
+
+                        <!-- データベース名 -->
+                        <TextBlock Text="データベース名" Margin="0,0,0,4" Foreground="#555"/>
+                        <TextBox Text="{Binding DbName, UpdateSourceTrigger=PropertyChanged}"
+                                 Margin="0,0,0,12" Padding="8"/>
+
+                        <!-- Windows認証チェックボックス -->
+                        <CheckBox Content="Windows認証を使用する"
+                                  IsChecked="{Binding UseIntegratedSecurity}"
+                                  Margin="0,0,0,12" FontSize="14"/>
+
+                        <!-- ユーザー名 -->
+                        <TextBlock Text="ユーザー名" Margin="0,0,0,4" Foreground="#555"
+                                   IsEnabled="{Binding IsUserPasswordEnabled}"/>
+                        <TextBox Text="{Binding DbUsername, UpdateSourceTrigger=PropertyChanged}"
+                                 IsEnabled="{Binding IsUserPasswordEnabled}"
+                                 Margin="0,0,0,12" Padding="8"/>
+
+                        <!-- パスワード -->
+                        <TextBlock Text="パスワード" Margin="0,0,0,4" Foreground="#555"
+                                   IsEnabled="{Binding IsUserPasswordEnabled}"/>
+                        <PasswordBox x:Name="PasswordBox"
+                                     IsEnabled="{Binding IsUserPasswordEnabled}"
+                                     PasswordChanged="PasswordBox_PasswordChanged"
+                                     Margin="0,0,0,16" Padding="8"/>
+
+                        <!-- 接続テストボタン -->
+                        <Button Content="接続テスト" Command="{Binding TestConnectionCommand}"
+                                Padding="16,8" HorizontalAlignment="Left"
+                                Background="#4CAF50" Foreground="White" BorderThickness="0" Cursor="Hand"
+                                IsEnabled="{Binding IsTesting, Converter={StaticResource InverseBooleanConverter}}"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
 
         <!-- ステータスバー -->
         <Border Grid.Row="2" Background="#F5F5F5" Padding="16" BorderBrush="#E0E0E0" BorderThickness="0,1,0,0">
