@@ -153,7 +153,15 @@ public class LocalDbSetupService
             bootstrapDbManager.Save(config);
             result.Steps.Add("✓ bootstrap_db.jsonを保存");
 
-            // 7. 接続テスト
+            // 7. データベース作成（EF Core Migrationsを使用）
+            _logger?.Info("LocalDbSetupService", "データベース初期化");
+            result.Steps.Add("データベース初期化中");
+
+            await InitializeDatabaseAsync(connectionString);
+
+            result.Steps.Add("✓ データベース初期化完了");
+
+            // 8. 接続テスト
             _logger?.Info("LocalDbSetupService", "接続テスト");
             result.Steps.Add("接続テスト中");
 
@@ -166,14 +174,6 @@ public class LocalDbSetupService
             }
 
             result.Steps.Add("✓ 接続テスト成功");
-
-            // 8. データベース作成（EF Core Migrationsを使用）
-            _logger?.Info("LocalDbSetupService", "データベース初期化");
-            result.Steps.Add("データベース初期化中");
-
-            await InitializeDatabaseAsync(connectionString);
-
-            result.Steps.Add("✓ データベース初期化完了");
 
             result.Success = true;
             result.Message = "LocalDB環境のセットアップが完了しました。";
