@@ -17,8 +17,11 @@ public class MainViewModel : ViewModelBase
     private readonly HealthCheck? _healthCheck;
     private readonly ISettingsService? _settingsService;
     private readonly IThemeService? _themeService;
+    private readonly INotificationCenter? _notificationCenter;
+    private readonly IDataListService? _dataListService;
     private readonly string? _dataDirectory;
     private readonly string? _encryptionKey;
+    private int _unreadNotificationCount;
 
     public MainViewModel(
         User currentUser,
@@ -26,6 +29,8 @@ public class MainViewModel : ViewModelBase
         HealthCheck? healthCheck = null,
         ISettingsService? settingsService = null,
         IThemeService? themeService = null,
+        INotificationCenter? notificationCenter = null,
+        IDataListService? dataListService = null,
         string? dataDirectory = null,
         string? encryptionKey = null)
     {
@@ -34,6 +39,8 @@ public class MainViewModel : ViewModelBase
         _healthCheck = healthCheck;
         _settingsService = settingsService;
         _themeService = themeService;
+        _notificationCenter = notificationCenter;
+        _dataListService = dataListService;
         _dataDirectory = dataDirectory;
         _encryptionKey = encryptionKey;
 
@@ -41,7 +48,16 @@ public class MainViewModel : ViewModelBase
         ShowSettingsCommand = new RelayCommand(ShowSettings);
         ShowDiagnosticsCommand = new RelayCommand(ShowDiagnostics);
         ShowAboutCommand = new RelayCommand(ShowAbout);
+        ShowNotificationsCommand = new RelayCommand(ShowNotifications);
+        ShowDataListCommand = new RelayCommand(ShowDataList);
         LogoutCommand = new RelayCommand(Logout);
+
+        // 通知センターのイベント購読
+        if (_notificationCenter != null)
+        {
+            _notificationCenter.NotificationAdded += async (s, e) => await UpdateUnreadCountAsync();
+            _ = UpdateUnreadCountAsync();
+        }
     }
 
     /// <summary>
@@ -83,9 +99,32 @@ public class MainViewModel : ViewModelBase
     public ICommand ShowAboutCommand { get; }
 
     /// <summary>
+    /// 通知センター表示コマンド
+    /// </summary>
+    public ICommand ShowNotificationsCommand { get; }
+
+    /// <summary>
+    /// データ一覧表示コマンド
+    /// </summary>
+    public ICommand ShowDataListCommand { get; }
+
+    /// <summary>
     /// ログアウトコマンド
     /// </summary>
     public ICommand LogoutCommand { get; }
+
+    /// <summary>
+    /// 未読通知件数
+    /// </summary>
+    public int UnreadNotificationCount
+    {
+        get => _unreadNotificationCount;
+        set
+        {
+            _unreadNotificationCount = value;
+            OnPropertyChanged();
+        }
+    }
 
     /// <summary>
     /// ログアウト成功イベント
@@ -130,6 +169,54 @@ public class MainViewModel : ViewModelBase
         var aboutWindow = new Views.AboutWindow();
         aboutWindow.ShowDialog();
         CurrentViewTitle = "ホーム";
+    }
+
+    private void ShowNotifications()
+    {
+        CurrentViewTitle = "通知センター";
+
+        if (_notificationCenter == null)
+        {
+            _logger?.Warn("MainViewModel", "通知センターが初期化されていません");
+            return;
+        }
+
+        var viewModel = new NotificationCenterViewModel(_notificationCenter);
+        var notificationWindow = new Views.NotificationCenterWindow(viewModel);
+        notificationWindow.ShowDialog();
+
+        CurrentViewTitle = "ホーム";
+    }
+
+    private void ShowDataList()
+    {
+        CurrentViewTitle = "データ一覧";
+
+        if (_dataListService == null)
+        {
+            _logger?.Warn("MainViewModel", "データ一覧サービスが初期化されていません");
+            System.Windows.MessageBox.Show(
+                "データ一覧機能を利用するには、Databaseモードで起動し、データベース接続を設定する必要があります。",
+                "機能利用不可",
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Information);
+            CurrentViewTitle = "ホーム";
+            return;
+        }
+
+        var viewModel = new DataListViewModel(_dataListService, _logger);
+        var dataListWindow = new Views.DataListWindow(viewModel);
+        dataListWindow.ShowDialog();
+
+        CurrentViewTitle = "ホーム";
+    }
+
+    private async Task UpdateUnreadCountAsync()
+    {
+        if (_notificationCenter != null)
+        {
+            UnreadNotificationCount = await _notificationCenter.GetUnreadCountAsync();
+        }
     }
 
     private void Logout()

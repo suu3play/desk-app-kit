@@ -36,6 +36,23 @@
 
                 <!-- 右側: メニューボタン群 -->
                 <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- 通知ボタン（バッジ付き） -->
+                    <Button Command="{Binding ShowNotificationsCommand}"
+                            Background="#1976D2" Foreground="White" BorderThickness="0"
+                            Padding="12,6" Margin="0,0,8,0" Cursor="Hand">
+                        <Grid>
+                            <TextBlock Text="通知" VerticalAlignment="Center"/>
+                            <Border Background="#F44336" CornerRadius="8" Padding="4,2"
+                                    VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,-8,20,0" Width="16" Height="16"
+                                    Visibility="{Binding UnreadNotificationCount, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <TextBlock Text="{Binding UnreadNotificationCount}" Foreground="White"
+                                           FontSize="10" FontWeight="Bold"/>
+                            </Border>
+                        </Grid>
+                        <Button.ToolTip>
+                            <ToolTip Content="通知センター"/>
+                        </Button.ToolTip>
+                    </Button>
                     <Button Content="設定" Command="{Binding ShowSettingsCommand}"
                             Background="#1976D2" Foreground="White" BorderThickness="0"
                             Padding="16,6" Margin="0,0,8,0" Cursor="Hand">
@@ -48,6 +65,13 @@
                             Padding="16,6" Margin="0,0,8,0" Cursor="Hand">
                         <Button.ToolTip>
                             <ToolTip Content="ヘルスチェック・ログ表示 (Alt+D)"/>
+                        </Button.ToolTip>
+                    </Button>
+                    <Button Content="データ一覧" Command="{Binding ShowDataListCommand}"
+                            Background="#1976D2" Foreground="White" BorderThickness="0"
+                            Padding="16,6" Margin="0,0,8,0" Cursor="Hand">
+                        <Button.ToolTip>
+                            <ToolTip Content="データ一覧表示 (SQL実行)"/>
                         </Button.ToolTip>
                     </Button>
                     <Button Content="バージョン情報" Command="{Binding ShowAboutCommand}"
