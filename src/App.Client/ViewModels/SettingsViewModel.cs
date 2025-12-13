@@ -124,7 +124,7 @@ public class SettingsViewModel : ViewModelBase
         try
         {
             // StorageMode保存
-            _settingsService.Set("App", "StorageMode", SelectedStorageMode.ToString());
+            _settingsService.Set("System", "StorageMode", SelectedStorageMode.ToString());
 
             // テーマ保存
             _themeService?.SaveCurrentTheme();

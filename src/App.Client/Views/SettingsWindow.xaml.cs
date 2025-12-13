@@ -39,6 +39,18 @@ public partial class SettingsWindow : Window
 
         if (result == MessageBoxResult.Yes)
         {
+            // SaveCommandを実行して設定を保存
+            if (_viewModel.SaveCommand.CanExecute(null))
+            {
+                _viewModel.SaveCommand.Execute(null);
+            }
+
+            // データベース設定も保存
+            if (_viewModel.DatabaseSettings.SaveCommand.CanExecute(null))
+            {
+                _viewModel.DatabaseSettings.SaveCommand.Execute(null);
+            }
+
             DialogResult = true;
             Close();
         }
