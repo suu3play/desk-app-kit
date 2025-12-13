@@ -17,6 +17,7 @@ public class AppDbContext : DbContext
     public DbSet<Log> Logs { get; set; }
     public DbSet<SchemaVersion> SchemaVersions { get; set; }
     public DbSet<ClientVersionStatus> ClientVersionStatuses { get; set; }
+    public DbSet<Notification> Notifications { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -75,6 +76,17 @@ public class AppDbContext : DbContext
             entity.Property(e => e.CurrentAppVersion).HasMaxLength(50).IsRequired();
             entity.Property(e => e.CurrentSchemaVersion).HasMaxLength(50).IsRequired();
             entity.Property(e => e.LastUpdateErrorMessage).HasMaxLength(1000);
+        });
+
+        // Notifications
+        modelBuilder.Entity<Notification>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.Timestamp);
+            entity.HasIndex(e => e.UserId);
+            entity.Property(e => e.Title).HasMaxLength(200).IsRequired();
+            entity.Property(e => e.Message).HasMaxLength(2000).IsRequired();
+            entity.Property(e => e.Category).HasMaxLength(100);
         });
     }
 }
