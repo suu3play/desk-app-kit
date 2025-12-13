@@ -28,6 +28,43 @@ public class SettingsService : ISettingsService
     }
 
     /// <summary>
+    /// LocalDBインスタンスの起動を試行
+    /// </summary>
+    private void TryStartLocalDbInstance(string serverName)
+    {
+        try
+        {
+            // サーバー名から LocalDB インスタンス名を抽出
+            // 例: "(localdb)\\DeskAppKit" → "DeskAppKit"
+            if (serverName.StartsWith("(localdb)\\", StringComparison.OrdinalIgnoreCase))
+            {
+                var instanceName = serverName.Substring(10); // "(localdb)\\" の長さは10文字
+
+                // sqllocaldb start コマンドを実行
+                var startInfo = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "sqllocaldb",
+                    Arguments = $"start \"{instanceName}\"",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                using var process = System.Diagnostics.Process.Start(startInfo);
+                if (process != null)
+                {
+                    process.WaitForExit(5000); // 最大5秒待機
+                }
+            }
+        }
+        catch
+        {
+            // LocalDB起動に失敗しても続行（接続テストで判定される）
+        }
+    }
+
+    /// <summary>
     /// StorageModeを判定（フェイルセーフ付き）
     /// </summary>
     private StorageMode DetermineStorageMode()
@@ -46,6 +83,9 @@ public class SettingsService : ISettingsService
                     // bootstrap_db.jsonが存在しない → Localにフォールバック
                     return StorageMode.Local;
                 }
+
+                // LocalDBインスタンスを起動（接続テスト前に必要）
+                TryStartLocalDbInstance(dbConfig.Server);
 
                 // 接続テスト（同期的に実行）
                 var canConnect = _bootstrapDbManager.TestConnectionAsync(dbConfig).GetAwaiter().GetResult();
