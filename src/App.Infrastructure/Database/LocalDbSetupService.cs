@@ -70,7 +70,10 @@ public class LocalDbSetupService
     /// <summary>
     /// LocalDB環境を自動セットアップ
     /// </summary>
-    public async Task<LocalDbSetupResult> SetupAsync(string dataDirectory, string encryptionKey)
+    /// <param name="dataDirectory">データディレクトリ</param>
+    /// <param name="encryptionKey">暗号化キー</param>
+    /// <param name="seedSampleData">サンプルデータを投入するか</param>
+    public async Task<LocalDbSetupResult> SetupAsync(string dataDirectory, string encryptionKey, bool seedSampleData = true)
     {
         var result = new LocalDbSetupResult();
 
@@ -161,6 +164,17 @@ public class LocalDbSetupService
 
             result.Steps.Add("✓ データベース初期化完了");
 
+            // 7.5. サンプルデータ投入
+            if (seedSampleData)
+            {
+                _logger?.Info("LocalDbSetupService", "サンプルデータ投入");
+                result.Steps.Add("サンプルデータ投入中");
+
+                var (userCount, notificationCount) = await SeedSampleDataAsync(connectionString);
+
+                result.Steps.Add($"✓ サンプルユーザー {userCount}件、通知 {notificationCount}件を投入");
+            }
+
             // 8. 接続テスト（データベース作成直後なので少し待機）
             _logger?.Info("LocalDbSetupService", "接続テスト");
             result.Steps.Add("接続テスト中");
@@ -207,6 +221,20 @@ public class LocalDbSetupService
 
         // Migrationsを適用（データベースが存在しない場合は作成）
         await dbContext.Database.MigrateAsync();
+    }
+
+    /// <summary>
+    /// サンプルデータを投入
+    /// </summary>
+    private async Task<(int userCount, int notificationCount)> SeedSampleDataAsync(string connectionString)
+    {
+        var optionsBuilder = new DbContextOptionsBuilder<Persistence.DbContexts.AppDbContext>();
+        optionsBuilder.UseSqlServer(connectionString);
+
+        using var dbContext = new Persistence.DbContexts.AppDbContext(optionsBuilder.Options);
+
+        var seeder = new DatabaseSeeder(_logger);
+        return await seeder.SeedAsync(dbContext);
     }
 
     /// <summary>
