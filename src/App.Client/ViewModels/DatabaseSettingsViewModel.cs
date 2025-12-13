@@ -236,7 +236,7 @@ public class DatabaseSettingsViewModel : ViewModelBase
             }
 
             // セットアップ実行
-            var result = await setupService.SetupAsync(_dataDirectory, _encryptionKey);
+            var result = await setupService.SetupAsync(_dataDirectory, _encryptionKey, IncludeSampleData);
 
             if (result.Success)
             {
