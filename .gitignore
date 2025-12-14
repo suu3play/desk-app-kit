@@ -298,3 +298,11 @@ FodyWeavers.xsd
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# Sensitive configuration files
+**/bootstrap_db.json
+**/settings_app.json
+**/settings_user.json
+
+# Docker volumes
+docker/volumes/

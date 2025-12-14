@@ -129,6 +129,102 @@ DeskAppKit/
 - DBマイグレーション自動実行
 - 統合テスト
 
+## 開発環境セットアップ
+
+### Windows（LocalDB）
+
+Windows環境では、SQL Server Express LocalDBを使用した開発環境が利用できます。
+
+1. **LocalDBセットアップ（自動）**
+   - アプリケーションの設定画面から「ローカルDB環境をセットアップ」ボタンをクリック
+   - LocalDBインスタンスの作成、データベース初期化、サンプルデータ投入が自動実行されます
+
+2. **手動セットアップ**
+   ```bash
+   # LocalDBインスタンスの確認
+   sqllocaldb info
+
+   # インスタンスの作成（未作成の場合）
+   sqllocaldb create DeskAppKit
+
+   # インスタンスの起動
+   sqllocaldb start DeskAppKit
+   ```
+
+### Linux / Mac（Docker）
+
+Linux/Mac環境では、Docker Composeを使用してSQL Serverコンテナで開発環境を構築できます。
+
+#### 必要要件
+- Docker Desktop (Mac) または Docker Engine (Linux)
+- Docker Compose v3.8以降
+
+#### セットアップ手順
+
+1. **SQL Serverコンテナの起動**
+   ```bash
+   # プロジェクトルートで実行
+   docker-compose up -d
+   ```
+
+2. **データベース初期化の確認**
+   ```bash
+   # ログを確認（初期化が完了するまで待機）
+   docker-compose logs -f sqlserver-init
+   ```
+
+3. **接続設定ファイルの生成**
+
+   **Linux/Mac:**
+   ```bash
+   ./docker/scripts/generate-bootstrap-config.sh
+   ```
+
+   **Windows (PowerShell):**
+   ```powershell
+   .\docker\scripts\generate-bootstrap-config.ps1
+   ```
+
+   このスクリプトは`Data/bootstrap_db.json`を生成します。
+
+4. **アプリケーション起動**
+   ```bash
+   dotnet run --project src/App.Client/App.Client.csproj
+   ```
+
+   Databaseモードで起動し、以下のユーザーでログイン可能：
+   - **管理者**: admin / admin123
+   - **一般ユーザー**: user / user123
+
+#### Docker環境の接続設定
+
+- **サーバー**: localhost,1433
+- **データベース**: DeskAppKitDb
+- **ユーザーID**: sa
+- **パスワード**: YourStrong!Passw0rd
+
+#### コンテナ管理コマンド
+
+```bash
+# コンテナの停止
+docker-compose down
+
+# コンテナの停止 + データ削除
+docker-compose down -v
+
+# コンテナの再起動
+docker-compose restart
+
+# ログの確認
+docker-compose logs -f sqlserver
+```
+
+#### 注意事項
+
+- **Mac M1/M2**: SQL Server LinuxコンテナはARM非対応のため、Rosetta 2経由での動作となり、パフォーマンスが低下する場合があります
+- **ポート競合**: ローカルにSQL Serverがインストール済みの場合、`docker-compose.yml`のポート番号を変更してください
+- **セキュリティ**: `bootstrap_db.json`には機密情報が含まれるため、`.gitignore`に追加してバージョン管理から除外してください
+
 ## ビルド
 
 ```bash
