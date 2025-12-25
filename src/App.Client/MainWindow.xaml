@@ -44,7 +44,7 @@
                             <TextBlock Text="通知" VerticalAlignment="Center"/>
                             <Border Background="#F44336" CornerRadius="8" Padding="4,2"
                                     VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,-8,20,0" Width="16" Height="16"
-                                    Visibility="{Binding UnreadNotificationCount, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    Visibility="{Binding UnreadNotificationCount, Converter={StaticResource BooleanToVisibilityConverter}}" Cursor="">
                                 <TextBlock Text="{Binding UnreadNotificationCount}" Foreground="White"
                                            FontSize="10" FontWeight="Bold"/>
                             </Border>
@@ -90,9 +90,8 @@
 
         <!-- メインコンテンツエリア -->
         <Grid Grid.Row="1">
-            <!-- ContentControl: 各画面ビューをここに動的に表示 -->
-            <ContentControl Content="{Binding CurrentView}">
-                <!-- デフォルトコンテンツ（ビューが指定されていない場合） -->
+            <!-- ホーム画面（デフォルトコンテンツ） -->
+            <ContentControl>
                 <ContentControl.ContentTemplate>
                     <DataTemplate>
                         <Grid Margin="24">

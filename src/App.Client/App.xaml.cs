@@ -59,11 +59,16 @@ public partial class App : Application
             _logger.Info("App", "グローバル例外ハンドラーを登録しました");
 
             // 4. 設定サービス初期化
+            _logger.Info("App", "設定サービスを初期化中...");
             var settingsService = new SettingsService(dataDirectory, encryptionKey);
+            _logger.Info("App", "設定サービスのLoad()を呼び出し中...");
             settingsService.Load();
+            _logger.Info("App", "設定サービスのLoad()完了");
 
             // 4-2. テーマサービス初期化
+            _logger.Info("App", "テーマサービスを初期化中...");
             _themeService = new ThemeService(settingsService);
+            _logger.Info("App", "テーマサービスのLoadSavedTheme()を呼び出し中...");
             _themeService.LoadSavedTheme();
             _logger.Info("App", $"テーマサービスを初期化しました（現在のテーマ: {_themeService.CurrentMode}）");
 
@@ -113,7 +118,41 @@ public partial class App : Application
                 }
             }
 
-            // 6-3. データ一覧サービス初期化
+            // 6-3. Localモード時のSQLite初期化
+            string? sqliteConnectionString = null;
+            if (storageMode == Core.Enums.StorageMode.Local)
+            {
+                _logger.Info("App", "LocalモードでSQLiteデータベースを初期化中...");
+                try
+                {
+                    var sqliteSetup = new Infrastructure.Database.LocalSqliteSetupService(_logger);
+                    var sqliteResult = sqliteSetup.SetupAsync(dataDirectory, seedSampleData: true).GetAwaiter().GetResult();
+
+                    if (sqliteResult.Success)
+                    {
+                        sqliteConnectionString = sqliteResult.ConnectionString;
+                        _logger.Info("App", $"SQLite初期化完了: {sqliteResult.ConnectionString}");
+
+                        // SQLite用の認証サービスを初期化
+                        var optionsBuilder = new Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<AppDbContext>();
+                        optionsBuilder.UseSqlite(sqliteConnectionString);
+                        var dbContext = new AppDbContext(optionsBuilder.Options);
+                        var userRepository = new Repository<Core.Models.User>(dbContext);
+                        _authenticationService = new AuthenticationService(userRepository);
+                        _logger.Info("App", "SQLite用認証サービスを初期化しました");
+                    }
+                    else
+                    {
+                        _logger.Warn("App", $"SQLite初期化失敗: {sqliteResult.ErrorMessage}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error("App", "SQLite初期化エラー", ex);
+                }
+            }
+
+            // 6-4. データ一覧サービス初期化
             IDataListService? dataListService = null;
             if (storageMode == Core.Enums.StorageMode.Database)
             {
@@ -146,12 +185,29 @@ public partial class App : Application
                     _logger.Error("App", "データ一覧サービス初期化エラー", ex);
                 }
             }
-            else
+            else if (storageMode == Core.Enums.StorageMode.Local && !string.IsNullOrEmpty(sqliteConnectionString))
             {
-                _logger.Info("App", "Localモードのため、データ一覧サービスは利用できません。");
+                // LocalモードでSQLite接続が成功した場合、データ一覧サービスを初期化
+                try
+                {
+                    var configBuilder = new ConfigurationBuilder();
+                    var configDict = new Dictionary<string, string?>
+                    {
+                        ["ConnectionStrings:DefaultConnection"] = sqliteConnectionString
+                    };
+                    configBuilder.AddInMemoryCollection(configDict);
+                    var configuration = configBuilder.Build();
+
+                    dataListService = new DataListService(configuration, _logger);
+                    _logger.Info("App", "SQLite用データ一覧サービスを初期化しました");
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error("App", "SQLite用データ一覧サービス初期化エラー", ex);
+                }
             }
 
-            // 7. Localモードの場合はログイン画面をスキップ
+            // 7. Localモード（SQLite使用）の場合はログイン画面を表示
             if (_authenticationService == null)
             {
                 _logger.Info("App", "Localモードで起動します（ログイン機能なし）");
@@ -197,12 +253,49 @@ public partial class App : Application
         }
         catch (Exception ex)
         {
+            // ログファイルに詳細を記録（MessageBox表示前に確実に記録）
+            var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            var logDirectory = Path.Combine(baseDirectory, "Logs");
+            Directory.CreateDirectory(logDirectory);
+            var errorLogPath = Path.Combine(logDirectory, $"startup_error_{DateTime.Now:yyyyMMddHHmmss}.txt");
+            try
+            {
+                var errorDetails = $"""
+                    起動時エラー
+                    発生日時: {DateTime.Now:yyyy-MM-dd HH:mm:ss}
+
+                    【例外情報】
+                    タイプ: {ex.GetType().FullName}
+                    メッセージ: {ex.Message}
+
+                    【スタックトレース】
+                    {ex.StackTrace}
+
+                    【内部例外】
+                    {(ex.InnerException != null ? $"{ex.InnerException.GetType().FullName}: {ex.InnerException.Message}\n{ex.InnerException.StackTrace}" : "なし")}
+                    """;
+                File.WriteAllText(errorLogPath, errorDetails);
+            }
+            catch
+            {
+                // ファイル書き込み失敗は無視
+            }
+
             _logger?.Error("App", "起動時エラー", ex);
-            MessageBox.Show(
-                $"アプリケーションの起動に失敗しました。\n\n{ex.Message}",
-                "起動エラー",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+
+            try
+            {
+                MessageBox.Show(
+                    $"アプリケーションの起動に失敗しました。\n\n{ex.Message}\n\n詳細: {errorLogPath}",
+                    "起動エラー",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+            catch
+            {
+                // MessageBox表示失敗は無視
+            }
+
             Shutdown();
         }
     }
