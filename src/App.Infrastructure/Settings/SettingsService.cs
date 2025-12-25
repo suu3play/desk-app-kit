@@ -87,8 +87,8 @@ public class SettingsService : ISettingsService
                 // LocalDBインスタンスを起動（接続テスト前に必要）
                 TryStartLocalDbInstance(dbConfig.Server);
 
-                // 接続テスト（同期的に実行）
-                var canConnect = _bootstrapDbManager.TestConnectionAsync(dbConfig).GetAwaiter().GetResult();
+                // 接続テスト（同期版を使用してデッドロック回避）
+                var canConnect = _bootstrapDbManager.TestConnection(dbConfig);
                 if (!canConnect)
                 {
                     // 接続失敗 → Localにフォールバック

@@ -23,6 +23,10 @@ public class AppDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        // DBプロバイダーを検出
+        var isSqlite = Database.IsSqlite();
+        var isSqlServer = Database.IsSqlServer();
+
         // Users
         modelBuilder.Entity<User>(entity =>
         {
@@ -32,6 +36,12 @@ public class AppDbContext : DbContext
             entity.Property(e => e.DisplayName).HasMaxLength(200).IsRequired();
             entity.Property(e => e.PasswordHash).HasMaxLength(500).IsRequired();
             entity.Property(e => e.Salt).HasMaxLength(200).IsRequired();
+
+            // SQLiteの場合、GuidをTEXT型として扱う
+            if (isSqlite)
+            {
+                entity.Property(e => e.UserId).HasConversion<string>();
+            }
         });
 
         // Settings
@@ -43,6 +53,12 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Key).HasMaxLength(200).IsRequired();
             entity.Property(e => e.DataType).HasMaxLength(50).IsRequired();
             entity.Property(e => e.Description).HasMaxLength(500);
+
+            if (isSqlite)
+            {
+                entity.Property(e => e.SettingId).HasConversion<string>();
+                entity.Property(e => e.UserId).HasConversion<string>();
+            }
         });
 
         // Logs
@@ -54,6 +70,11 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Logger).HasMaxLength(200).IsRequired();
             entity.Property(e => e.MachineName).HasMaxLength(100).IsRequired();
             entity.Property(e => e.AppVersion).HasMaxLength(50).IsRequired();
+
+            if (isSqlite)
+            {
+                entity.Property(e => e.LogId).HasConversion<string>();
+            }
         });
 
         // SchemaVersion
@@ -65,6 +86,11 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Version).HasMaxLength(50).IsRequired();
             entity.Property(e => e.MigrationScriptUpPath).HasMaxLength(500);
             entity.Property(e => e.MigrationScriptDownPath).HasMaxLength(500);
+
+            if (isSqlite)
+            {
+                entity.Property(e => e.SchemaVersionId).HasConversion<string>();
+            }
         });
 
         // ClientVersionStatus
@@ -76,6 +102,11 @@ public class AppDbContext : DbContext
             entity.Property(e => e.CurrentAppVersion).HasMaxLength(50).IsRequired();
             entity.Property(e => e.CurrentSchemaVersion).HasMaxLength(50).IsRequired();
             entity.Property(e => e.LastUpdateErrorMessage).HasMaxLength(1000);
+
+            if (isSqlite)
+            {
+                entity.Property(e => e.ClientVersionStatusId).HasConversion<string>();
+            }
         });
 
         // Notifications
@@ -87,6 +118,12 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Title).HasMaxLength(200).IsRequired();
             entity.Property(e => e.Message).HasMaxLength(2000).IsRequired();
             entity.Property(e => e.Category).HasMaxLength(100);
+
+            if (isSqlite)
+            {
+                entity.Property(e => e.Id).HasConversion<string>();
+                entity.Property(e => e.UserId).HasConversion<string>();
+            }
         });
     }
 }

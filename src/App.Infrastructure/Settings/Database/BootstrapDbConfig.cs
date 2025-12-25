@@ -90,14 +90,31 @@ public class BootstrapDbManager
     }
 
     /// <summary>
-    /// 接続テスト
+    /// 接続テスト（非同期版）
     /// </summary>
     public async Task<bool> TestConnectionAsync(BootstrapDbConfig config)
     {
         try
         {
             using var connection = new Microsoft.Data.SqlClient.SqlConnection(config.GetConnectionString());
-            await connection.OpenAsync();
+            await connection.OpenAsync().ConfigureAwait(false);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// 接続テスト（同期版）
+    /// </summary>
+    public bool TestConnection(BootstrapDbConfig config)
+    {
+        try
+        {
+            using var connection = new Microsoft.Data.SqlClient.SqlConnection(config.GetConnectionString());
+            connection.Open();
             return true;
         }
         catch
