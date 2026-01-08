@@ -48,9 +48,11 @@ public partial class App : Application
             _logger = new FileLogger(logDirectory, appVersion);
             _logger.Info("App", "アプリケーション起動");
 
-            // 3-1. 通知センター初期化
-            _notificationCenter = new Infrastructure.Notifications.NotificationCenter(_logger);
-            _logger.Info("App", "通知センターを初期化しました");
+            // 3-1. 通知センター初期化（StorageMode取得後に実施）
+            // 一時的にメモリ内ストレージで初期化
+            var tempStorage = new Infrastructure.Notifications.JsonNotificationStorage(dataDirectory, _logger);
+            _notificationCenter = new Infrastructure.Notifications.NotificationCenter(tempStorage, _logger);
+            _logger.Info("App", "通知センターを初期化しました（一時）");
 
             // 3-2. グローバル例外ハンドラー登録
             var errorLogDirectory = Path.Combine(baseDirectory, "ErrorLogs");
@@ -76,6 +78,20 @@ public partial class App : Application
             var storageMode = settingsService.GetStorageMode();
             _logger.Info("App", $"StorageMode: {storageMode}");
 
+            // 5-1. NotificationCenterをStorageModeに応じて再初期化
+            INotificationStorage notificationStorage;
+            if (storageMode == Core.Enums.StorageMode.Local)
+            {
+                notificationStorage = new Infrastructure.Notifications.JsonNotificationStorage(dataDirectory, _logger);
+                _logger.Info("App", "通知センター: JSONストレージを使用");
+            }
+            else
+            {
+                // Database用は後で初期化（DbContext作成後）
+                notificationStorage = tempStorage;
+            }
+            _notificationCenter = new Infrastructure.Notifications.NotificationCenter(notificationStorage, _logger);
+
             // 6. 認証サービス初期化
             if (storageMode == Core.Enums.StorageMode.Database)
             {
@@ -90,6 +106,12 @@ public partial class App : Application
                         optionsBuilder.UseSqlServer(connectionString);
 
                         var dbContext = new AppDbContext(optionsBuilder.Options);
+
+                        // DatabaseNotificationStorageを使用してNotificationCenterを再初期化
+                        var dbNotificationStorage = new Infrastructure.Notifications.DatabaseNotificationStorage(dbContext, _logger);
+                        _notificationCenter = new Infrastructure.Notifications.NotificationCenter(dbNotificationStorage, _logger);
+                        _logger.Info("App", "通知センター: Databaseストレージを使用");
+
                         var userRepository = new Repository<Core.Models.User>(dbContext);
                         _authenticationService = new AuthenticationService(userRepository);
                         _logger.Info("App", "Databaseモードで認証サービスを初期化しました");
@@ -137,6 +159,12 @@ public partial class App : Application
                         var optionsBuilder = new Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<AppDbContext>();
                         optionsBuilder.UseSqlite(sqliteConnectionString);
                         var dbContext = new AppDbContext(optionsBuilder.Options);
+
+                        // DatabaseNotificationStorageを使用してNotificationCenterを再初期化（SQLite）
+                        var sqliteNotificationStorage = new Infrastructure.Notifications.DatabaseNotificationStorage(dbContext, _logger);
+                        _notificationCenter = new Infrastructure.Notifications.NotificationCenter(sqliteNotificationStorage, _logger);
+                        _logger.Info("App", "通知センター: SQLite Databaseストレージを使用");
+
                         var userRepository = new Repository<Core.Models.User>(dbContext);
                         _authenticationService = new AuthenticationService(userRepository);
                         _logger.Info("App", "SQLite用認証サービスを初期化しました");

@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using DeskAppKit.Core.Interfaces;
 using DeskAppKit.Core.Models;
 
@@ -9,13 +8,14 @@ namespace DeskAppKit.Infrastructure.Notifications;
 /// </summary>
 public class NotificationCenter : INotificationCenter
 {
-    private readonly ConcurrentBag<Notification> _notifications = new();
+    private readonly INotificationStorage _storage;
     private readonly ILogger? _logger;
 
     public event EventHandler<NotificationEventArgs>? NotificationAdded;
 
-    public NotificationCenter(ILogger? logger = null)
+    public NotificationCenter(INotificationStorage storage, ILogger? logger = null)
     {
+        _storage = storage ?? throw new ArgumentNullException(nameof(storage));
         _logger = logger;
     }
 
@@ -29,7 +29,8 @@ public class NotificationCenter : INotificationCenter
             throw new ArgumentNullException(nameof(notification));
         }
 
-        _notifications.Add(notification);
+        // 非同期保存を同期的に実行（UIスレッドからの呼び出しを想定）
+        _storage.SaveNotificationAsync(notification).GetAwaiter().GetResult();
         _logger?.Info("NotificationCenter", $"通知追加: {notification.Title}");
 
         NotificationAdded?.Invoke(this, new NotificationEventArgs(notification));
@@ -38,9 +39,10 @@ public class NotificationCenter : INotificationCenter
     /// <summary>
     /// 通知を取得
     /// </summary>
-    public Task<IEnumerable<Notification>> GetNotificationsAsync(NotificationFilter? filter = null)
+    public async Task<IEnumerable<Notification>> GetNotificationsAsync(NotificationFilter? filter = null)
     {
-        var query = _notifications.AsEnumerable();
+        var allNotifications = await _storage.GetAllNotificationsAsync().ConfigureAwait(false);
+        var query = allNotifications.AsEnumerable();
 
         if (filter != null)
         {
@@ -78,84 +80,70 @@ public class NotificationCenter : INotificationCenter
             }
         }
 
-        var result = query.OrderByDescending(n => n.Timestamp).ToList();
-        return Task.FromResult<IEnumerable<Notification>>(result);
+        return query.OrderByDescending(n => n.Timestamp).ToList();
     }
 
     /// <summary>
     /// 通知を既読にする
     /// </summary>
-    public Task MarkAsReadAsync(Guid notificationId)
+    public async Task MarkAsReadAsync(Guid notificationId)
     {
-        var notification = _notifications.FirstOrDefault(n => n.Id == notificationId);
+        var allNotifications = await _storage.GetAllNotificationsAsync().ConfigureAwait(false);
+        var notification = allNotifications.FirstOrDefault(n => n.Id == notificationId);
+
         if (notification != null)
         {
             notification.IsRead = true;
+            await _storage.UpdateNotificationAsync(notification).ConfigureAwait(false);
             _logger?.Debug("NotificationCenter", $"通知既読: {notificationId}");
         }
-
-        return Task.CompletedTask;
     }
 
     /// <summary>
     /// すべての通知を既読にする
     /// </summary>
-    public Task MarkAllAsReadAsync()
+    public async Task MarkAllAsReadAsync()
     {
-        foreach (var notification in _notifications)
+        var allNotifications = await _storage.GetAllNotificationsAsync().ConfigureAwait(false);
+
+        foreach (var notification in allNotifications)
         {
-            notification.IsRead = true;
+            if (!notification.IsRead)
+            {
+                notification.IsRead = true;
+                await _storage.UpdateNotificationAsync(notification).ConfigureAwait(false);
+            }
         }
 
         _logger?.Info("NotificationCenter", "すべての通知を既読にしました");
-        return Task.CompletedTask;
     }
 
     /// <summary>
     /// 通知を削除
     /// </summary>
-    public Task DeleteNotificationAsync(Guid notificationId)
+    public async Task DeleteNotificationAsync(Guid notificationId)
     {
-        var notification = _notifications.FirstOrDefault(n => n.Id == notificationId);
-        if (notification != null)
-        {
-            // ConcurrentBagから削除する代わりに、新しいリストを作成
-            var remaining = _notifications.Where(n => n.Id != notificationId).ToList();
-            _notifications.Clear();
-            foreach (var n in remaining)
-            {
-                _notifications.Add(n);
-            }
-
-            _logger?.Info("NotificationCenter", $"通知削除: {notificationId}");
-        }
-
-        return Task.CompletedTask;
+        await _storage.DeleteNotificationAsync(notificationId).ConfigureAwait(false);
+        _logger?.Info("NotificationCenter", $"通知削除: {notificationId}");
     }
 
     /// <summary>
     /// 古い通知をクリア
     /// </summary>
-    public Task ClearOldNotificationsAsync(TimeSpan maxAge)
+    public async Task ClearOldNotificationsAsync(TimeSpan maxAge)
     {
         var threshold = DateTime.UtcNow - maxAge;
-        var toDelete = _notifications.Where(n => n.Timestamp < threshold).Select(n => n.Id).ToList();
-
-        foreach (var id in toDelete)
-        {
-            DeleteNotificationAsync(id).Wait();
-        }
-
-        _logger?.Info("NotificationCenter", $"古い通知を削除しました: {toDelete.Count}件");
-        return Task.CompletedTask;
+        await _storage.DeleteOldNotificationsAsync(threshold).ConfigureAwait(false);
+        _logger?.Info("NotificationCenter", "古い通知を削除しました");
     }
 
     /// <summary>
     /// 未読件数を取得
     /// </summary>
-    public Task<int> GetUnreadCountAsync()
+    public async Task<int> GetUnreadCountAsync()
     {
-        var count = _notifications.Count(n => !n.IsRead);
-        return Task.FromResult(count);
+        var allNotifications = await _storage.GetAllNotificationsAsync().ConfigureAwait(false);
+        var count = allNotifications.Count(n => !n.IsRead);
+        return count;
     }
 }
