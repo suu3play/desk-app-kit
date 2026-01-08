@@ -6,8 +6,7 @@
         xmlns:local="clr-namespace:DeskAppKit.Client"
         mc:Ignorable="d"
         Title="DeskAppKit - メインメニュー" Height="600" Width="900"
-        WindowStartupLocation="CenterScreen"
-        Background="{DynamicResource BackgroundBrush}">
+        WindowStartupLocation="CenterScreen">
 
     <Grid>
         <Grid.RowDefinitions>
@@ -36,23 +35,6 @@
 
                 <!-- 右側: メニューボタン群 -->
                 <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
-                    <!-- 通知ボタン（バッジ付き） -->
-                    <Button Command="{Binding ShowNotificationsCommand}"
-                            Background="#1976D2" Foreground="White" BorderThickness="0"
-                            Padding="12,6" Margin="0,0,8,0" Cursor="Hand">
-                        <Grid>
-                            <TextBlock Text="通知" VerticalAlignment="Center"/>
-                            <Border Background="#F44336" CornerRadius="8" Padding="4,2"
-                                    VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,-8,20,0" Width="16" Height="16"
-                                    Visibility="{Binding UnreadNotificationCount, Converter={StaticResource BooleanToVisibilityConverter}}" Cursor="">
-                                <TextBlock Text="{Binding UnreadNotificationCount}" Foreground="White"
-                                           FontSize="10" FontWeight="Bold"/>
-                            </Border>
-                        </Grid>
-                        <Button.ToolTip>
-                            <ToolTip Content="通知センター"/>
-                        </Button.ToolTip>
-                    </Button>
                     <Button Content="設定" Command="{Binding ShowSettingsCommand}"
                             Background="#1976D2" Foreground="White" BorderThickness="0"
                             Padding="16,6" Margin="0,0,8,0" Cursor="Hand">
@@ -60,18 +42,29 @@
                             <ToolTip Content="アプリケーション設定 (Alt+S)"/>
                         </Button.ToolTip>
                     </Button>
+                    <Button Command="{Binding ShowNotificationsCommand}"
+                            Background="#1976D2" Foreground="White" BorderThickness="0"
+                            Padding="16,6" Margin="0,0,8,0" Cursor="Hand">
+                        <Button.ToolTip>
+                            <ToolTip Content="通知センター (Alt+N)"/>
+                        </Button.ToolTip>
+                        <Grid>
+                            <TextBlock Text="通知"/>
+                            <!-- 未読バッジ -->
+                            <Border Background="#F44336" CornerRadius="10" Padding="4,2"
+                                    HorizontalAlignment="Right" VerticalAlignment="Top"
+                                    Margin="0,-8,-8,0"
+                                    Visibility="{Binding UnreadNotificationCountVisibility}">
+                                <TextBlock Text="{Binding UnreadNotificationCount}"
+                                           Foreground="White" FontSize="10" FontWeight="Bold"/>
+                            </Border>
+                        </Grid>
+                    </Button>
                     <Button Content="診断" Command="{Binding ShowDiagnosticsCommand}"
                             Background="#1976D2" Foreground="White" BorderThickness="0"
                             Padding="16,6" Margin="0,0,8,0" Cursor="Hand">
                         <Button.ToolTip>
                             <ToolTip Content="ヘルスチェック・ログ表示 (Alt+D)"/>
-                        </Button.ToolTip>
-                    </Button>
-                    <Button Content="データ一覧" Command="{Binding ShowDataListCommand}"
-                            Background="#1976D2" Foreground="White" BorderThickness="0"
-                            Padding="16,6" Margin="0,0,8,0" Cursor="Hand">
-                        <Button.ToolTip>
-                            <ToolTip Content="データ一覧表示 (SQL実行)"/>
                         </Button.ToolTip>
                     </Button>
                     <Button Content="バージョン情報" Command="{Binding ShowAboutCommand}"
@@ -90,8 +83,9 @@
 
         <!-- メインコンテンツエリア -->
         <Grid Grid.Row="1">
-            <!-- ホーム画面（デフォルトコンテンツ） -->
-            <ContentControl>
+            <!-- ContentControl: 各画面ビューをここに動的に表示 -->
+            <ContentControl Content="{Binding CurrentView}">
+                <!-- デフォルトコンテンツ（ビューが指定されていない場合） -->
                 <ContentControl.ContentTemplate>
                     <DataTemplate>
                         <Grid Margin="24">
@@ -101,14 +95,14 @@
                             </Grid.RowDefinitions>
 
                             <!-- ウェルカムセクション -->
-                            <Border Grid.Row="0" Background="{DynamicResource CardBackgroundBrush}" Padding="24" Margin="0,0,0,16"
-                                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="4">
+                            <Border Grid.Row="0" Background="White" Padding="24" Margin="0,0,0,16"
+                                    BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="4">
                                 <StackPanel>
                                     <TextBlock Text="DeskAppKit へようこそ" FontSize="24" FontWeight="Bold"
-                                               Foreground="{DynamicResource PrimaryBrush}" Margin="0,0,0,8"/>
+                                               Foreground="#2196F3" Margin="0,0,0,8"/>
                                     <TextBlock Text="デスクトップアプリケーション共通基盤" FontSize="14"
-                                               Foreground="{DynamicResource SecondaryForegroundBrush}" Margin="0,0,0,16"/>
-                                    <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource SecondaryForegroundBrush}">
+                                               Foreground="#666" Margin="0,0,0,16"/>
+                                    <TextBlock TextWrapping="Wrap" Foreground="#666">
                                         <Run Text="このアプリケーションは、デスクトップアプリケーション開発における共通機能を提供します。"/>
                                         <LineBreak/>
                                         <Run Text="上部のメニューから各機能にアクセスできます。"/>
@@ -126,50 +120,50 @@
                                     </ItemsControl.ItemsPanel>
 
                                     <!-- カード1: 認証・ユーザー管理 -->
-                                    <Border Background="{DynamicResource CardBackgroundBrush}" Margin="0,0,8,8" Padding="20"
-                                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="4">
+                                    <Border Background="White" Margin="0,0,8,8" Padding="20"
+                                            BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="4">
                                         <StackPanel>
                                             <TextBlock Text="🔐" FontSize="32" Margin="0,0,0,12"/>
                                             <TextBlock Text="認証・ユーザー管理" FontSize="16" FontWeight="Bold"
-                                                       Foreground="{DynamicResource ForegroundBrush}" Margin="0,0,0,8"/>
+                                                       Foreground="#333" Margin="0,0,0,8"/>
                                             <TextBlock Text="ログイン、ユーザー認証、権限管理などの基本機能"
-                                                       TextWrapping="Wrap" Foreground="{DynamicResource SecondaryForegroundBrush}" FontSize="13"/>
+                                                       TextWrapping="Wrap" Foreground="#666" FontSize="13"/>
                                         </StackPanel>
                                     </Border>
 
                                     <!-- カード2: 設定管理 -->
-                                    <Border Background="{DynamicResource CardBackgroundBrush}" Margin="8,0,0,8" Padding="20"
-                                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="4">
+                                    <Border Background="White" Margin="8,0,0,8" Padding="20"
+                                            BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="4">
                                         <StackPanel>
                                             <TextBlock Text="⚙️" FontSize="32" Margin="0,0,0,12"/>
                                             <TextBlock Text="設定管理" FontSize="16" FontWeight="Bold"
-                                                       Foreground="{DynamicResource ForegroundBrush}" Margin="0,0,0,8"/>
+                                                       Foreground="#333" Margin="0,0,0,8"/>
                                             <TextBlock Text="アプリケーション設定、ユーザー設定の保存・読み込み"
-                                                       TextWrapping="Wrap" Foreground="{DynamicResource SecondaryForegroundBrush}" FontSize="13"/>
+                                                       TextWrapping="Wrap" Foreground="#666" FontSize="13"/>
                                         </StackPanel>
                                     </Border>
 
                                     <!-- カード3: ログ・診断 -->
-                                    <Border Background="{DynamicResource CardBackgroundBrush}" Margin="0,8,8,0" Padding="20"
-                                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="4">
+                                    <Border Background="White" Margin="0,8,8,0" Padding="20"
+                                            BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="4">
                                         <StackPanel>
                                             <TextBlock Text="📊" FontSize="32" Margin="0,0,0,12"/>
                                             <TextBlock Text="ログ・診断機能" FontSize="16" FontWeight="Bold"
-                                                       Foreground="{DynamicResource ForegroundBrush}" Margin="0,0,0,8"/>
+                                                       Foreground="#333" Margin="0,0,0,8"/>
                                             <TextBlock Text="アプリケーションログの記録、ヘルスチェック、診断情報"
-                                                       TextWrapping="Wrap" Foreground="{DynamicResource SecondaryForegroundBrush}" FontSize="13"/>
+                                                       TextWrapping="Wrap" Foreground="#666" FontSize="13"/>
                                         </StackPanel>
                                     </Border>
 
                                     <!-- カード4: 通知・メッセージング -->
-                                    <Border Background="{DynamicResource CardBackgroundBrush}" Margin="8,8,0,0" Padding="20"
-                                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="4">
+                                    <Border Background="White" Margin="8,8,0,0" Padding="20"
+                                            BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="4">
                                         <StackPanel>
                                             <TextBlock Text="🔔" FontSize="32" Margin="0,0,0,12"/>
                                             <TextBlock Text="通知・メッセージング" FontSize="16" FontWeight="Bold"
-                                                       Foreground="{DynamicResource ForegroundBrush}" Margin="0,0,0,8"/>
+                                                       Foreground="#333" Margin="0,0,0,8"/>
                                             <TextBlock Text="ユーザー通知、トースト通知、メッセージング機能"
-                                                       TextWrapping="Wrap" Foreground="{DynamicResource SecondaryForegroundBrush}" FontSize="13"/>
+                                                       TextWrapping="Wrap" Foreground="#666" FontSize="13"/>
                                         </StackPanel>
                                     </Border>
                                 </ItemsControl>
