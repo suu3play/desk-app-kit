@@ -18,6 +18,7 @@ public class AppDbContext : DbContext
     public DbSet<SchemaVersion> SchemaVersions { get; set; }
     public DbSet<ClientVersionStatus> ClientVersionStatuses { get; set; }
     public DbSet<Notification> Notifications { get; set; }
+    public DbSet<AuditLog> AuditLogs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -118,6 +119,27 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Title).HasMaxLength(200).IsRequired();
             entity.Property(e => e.Message).HasMaxLength(2000).IsRequired();
             entity.Property(e => e.Category).HasMaxLength(100);
+
+            if (isSqlite)
+            {
+                entity.Property(e => e.Id).HasConversion<string>();
+                entity.Property(e => e.UserId).HasConversion<string>();
+            }
+        });
+
+        // AuditLogs
+        modelBuilder.Entity<AuditLog>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.Timestamp);
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => new { e.EntityType, e.EntityId });
+            entity.Property(e => e.UserName).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.EntityType).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.EntityId).HasMaxLength(100);
+            entity.Property(e => e.IpAddress).HasMaxLength(50);
+            entity.Property(e => e.MachineName).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.Reason).HasMaxLength(500);
 
             if (isSqlite)
             {
